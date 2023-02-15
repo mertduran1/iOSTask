@@ -5,6 +5,13 @@
 //  Created by Mert Duran on 10.02.2023.
 //
 
+//
+//  ViewController.swift
+//  denedene
+//
+//  Created by Mert Duran on 11.02.2023.
+//
+
 import UIKit
 import AVFoundation
 
@@ -37,58 +44,7 @@ class ViewController: UIViewController, UISearchResultsUpdating, AVCaptureMetada
         super.viewDidLoad()
         
         setUpTableView()
-        requestTasks(accessToken: "\(ConfigAccess.accessToken)") { [weak self] (response, tasks, error) in
-            guard let self = self else { return }
-            if let error = error {
-                print("Error: \(error)")
-                return
-            }
-            guard let tasks = tasks else {
-                print("Error: No tasks found")
-                return
-            }
-            self.tasks = tasks
-            DispatchQueue.main.async {
-                self.tableView.reloadData()
-                self.refreshControl.endRefreshing()
-            }
-            let encoder = JSONEncoder()
-            if let encoded = try? encoder.encode(tasks) {
-                UserDefaults.standard.set(encoded, forKey: "tasks")
-            }
-        }
-        performLoginRequest { (response, accessToken, error) in
-            if let error = error {
-                print("Error: \(error)")
-                return
-            }
-
-            printAccessToken(response, accessToken, error)
-
-            if let accessToken = accessToken {
-                requestTasks(accessToken: accessToken) { (response, tasks, error) in
-                    if let error = error {
-                        print("Error: \(error)")
-                        return
-                    }
-
-                    if let response = response, response.statusCode != 200 {
-                        print("Unexpected status code: \(response.statusCode)")
-                        return
-                    }
-
-                    if let tasks = tasks {
-                        for task in tasks {
-                            print("Task: \(task.task), Title: \(task.title), Description: \(task.description), Color code: \(task.colorCode)")
-                        }
-                    } else {
-                        print("No tasks found in response")
-                    }
-                }
-            } else {
-                print("No access token found in response")
-            }
-        }
+        fetchData()
         setupSearchBar()
         refreshControl.addTarget(self, action: #selector(refreshData), for: .valueChanged)
         tableView.addSubview(refreshControl)
@@ -103,6 +59,36 @@ class ViewController: UIViewController, UISearchResultsUpdating, AVCaptureMetada
         let qrCodeButton = UIBarButtonItem(title: "Scan QR Code", style: .plain, target: self, action: #selector(scanQRCode))
         navigationItem.rightBarButtonItem = qrCodeButton
     }
+    
+    func fetchData() {
+        performLoginRequest { result in
+            switch result {
+            case .success:
+                self.requestTasks()
+            case .failure(let error):
+                print(error)
+            }
+        }
+    }
+
+    func requestTasks() {
+        iOSTask.requestTasks(accessToken: ConfigAccess.accessToken) { (response, tasks, error) in
+            if let error = error {
+                print(error)
+                return
+            }
+            guard let tasks = tasks else {
+                print("No tasks found")
+                return
+            }
+            self.tasks = tasks
+            self.filteredTasks = tasks
+            DispatchQueue.main.async {
+                self.tableView.reloadData()
+            }
+        }
+    }
+
     
     @objc func scanQRCode() {
         let captureDevice = AVCaptureDevice.default(for: AVMediaType.video)
@@ -165,7 +151,7 @@ class ViewController: UIViewController, UISearchResultsUpdating, AVCaptureMetada
     }
     
     @objc func refreshData() {
-        requestTasks(accessToken: "\(ConfigAccess.accessToken)") { [weak self] (response, tasks, error) in
+        iOSTask.requestTasks(accessToken: ConfigAccess.accessToken) { [weak self] (response, tasks, error) in
             guard let self = self else { return }
             if let error = error {
                 print("Error: \(error)")
@@ -228,3 +214,4 @@ extension ViewController: UISearchBarDelegate {
         searchBar.resignFirstResponder()
     }
 }
+

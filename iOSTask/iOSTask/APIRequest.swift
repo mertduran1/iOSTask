@@ -8,10 +8,16 @@
 import Foundation
 
 struct ConfigAccess {
-    static let accessToken = "90c575a2c53e90a8f238d36796e6038e993832f5"
+    static var accessToken: String? {
+        get {
+            return UserDefaults.standard.string(forKey: "accessToken")
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: "accessToken")
+        }
+    }
 }
-
-func performLoginRequest(completion: @escaping (_ response: HTTPURLResponse?, _ accessToken: String?, _ error: Error?) -> Void) {
+func performLoginRequest(completion: @escaping (Result<HTTPURLResponse, Error>) -> Void) {
     let headers = [
         "Authorization": "Basic QVBJX0V4cGxvcmVyOjEyMzQ1NmlzQUxhbWVQYXNz",
         "Content-Type": "application/json"
@@ -20,55 +26,59 @@ func performLoginRequest(completion: @escaping (_ response: HTTPURLResponse?, _ 
         "username": "365",
         "password": "1"
     ] as [String : Any]
-
+    
     let postData = try? JSONSerialization.data(withJSONObject: parameters)
-
+    
     let request = NSMutableURLRequest(url: URL(string: "https://api.baubuddy.de/index.php/login")!,
                                       cachePolicy: .useProtocolCachePolicy,
                                       timeoutInterval: 10.0)
     request.httpMethod = "POST"
     request.allHTTPHeaderFields = headers
     request.httpBody = postData
-
+    
     let session = URLSession.shared
     let dataTask = session.dataTask(with: request as URLRequest, completionHandler: { (data, response, error) in
         if let error = error {
             print("Error: \(error)")
-            completion(nil, nil, error)
+            completion(.failure(error))
         } else {
-            let httpResponse = response as? HTTPURLResponse
-            if let data = data {
+            if let httpResponse = response as? HTTPURLResponse {
                 do {
-                    let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
+                    let json = try JSONSerialization.jsonObject(with: data ?? Data(), options: []) as? [String: Any]
                     if let oauth = json?["oauth"] as? [String: Any], let accessToken = oauth["access_token"] as? String {
                         print("Access Token: \(accessToken)")
-                        completion(httpResponse, accessToken, nil)
+                        ConfigAccess.accessToken = accessToken
+                        completion(.success(httpResponse))
                     } else {
-                        completion(httpResponse, nil, NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Access token not found in JSON response"]))
+                        let error = NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Access token not found in JSON response"])
+                        completion(.failure(error))
                     }
                 } catch {
-                    completion(httpResponse, nil, error)
+                    completion(.failure(error))
                 }
             } else {
-                completion(httpResponse, nil, NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "No data received in response"]))
+                let error = NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "No data received in response"])
+                completion(.failure(error))
             }
         }
     })
-
+    
     dataTask.resume()
 }
+
+
 
 func printAccessToken(_ response: HTTPURLResponse?, _ accessToken: String?, _ error: Error?) {
     if let error = error {
         print("Error: \(error)")
         return
     }
-
+    
     if let response = response, response.statusCode != 200 {
         print("Unexpected status code: \(response.statusCode)")
         return
     }
-
+    
     if let accessToken = accessToken {
         print("Access token: \(accessToken)")
     } else {
@@ -76,9 +86,15 @@ func printAccessToken(_ response: HTTPURLResponse?, _ accessToken: String?, _ er
     }
 }
 
-func requestTasks(accessToken: String, completion: @escaping (_ response: HTTPURLResponse?, _ tasks: [Task]?, _ error: Error?) -> Void) {
+func requestTasks(accessToken: String?, completion: @escaping (_ response: HTTPURLResponse?, _ tasks: [Task]?, _ error: Error?) -> Void)
+ {
+    guard let accessToken = ConfigAccess.accessToken else {
+        completion(nil, nil, NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Access token not available"]))
+        return
+    }
+    
     let headers = [
-        "Authorization": "Bearer \(ConfigAccess.accessToken)",
+        "Authorization": "Bearer \(accessToken)",
         "Content-Type": "application/json"
     ]
 
