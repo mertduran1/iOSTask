@@ -87,7 +87,7 @@ func printAccessToken(_ response: HTTPURLResponse?, _ accessToken: String?, _ er
 }
 
 func requestTasks(accessToken: String?, completion: @escaping (_ response: HTTPURLResponse?, _ tasks: [Task]?, _ error: Error?) -> Void)
- {
+{
     guard let accessToken = ConfigAccess.accessToken else {
         completion(nil, nil, NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Access token not available"]))
         return
@@ -97,13 +97,13 @@ func requestTasks(accessToken: String?, completion: @escaping (_ response: HTTPU
         "Authorization": "Bearer \(accessToken)",
         "Content-Type": "application/json"
     ]
-
+    
     let request = NSMutableURLRequest(url: URL(string: "https://api.baubuddy.de/dev/index.php/v1/tasks/select")!,
                                       cachePolicy: .useProtocolCachePolicy,
                                       timeoutInterval: 10.0)
     request.httpMethod = "GET"
     request.allHTTPHeaderFields = headers
-
+    
     let session = URLSession.shared
     let dataTask = session.dataTask(with: request as URLRequest, completionHandler: { (data, response, error) in
         if let error = error {
@@ -124,6 +124,6 @@ func requestTasks(accessToken: String?, completion: @escaping (_ response: HTTPU
             }
         }
     })
-
+    
     dataTask.resume()
 }

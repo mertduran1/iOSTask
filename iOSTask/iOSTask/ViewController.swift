@@ -5,13 +5,6 @@
 //  Created by Mert Duran on 10.02.2023.
 //
 
-//
-//  ViewController.swift
-//  denedene
-//
-//  Created by Mert Duran on 11.02.2023.
-//
-
 import UIKit
 import AVFoundation
 
@@ -123,9 +116,6 @@ class ViewController: UIViewController, UISearchResultsUpdating, AVCaptureMetada
         previewLayer?.removeFromSuperlayer()
     }
 
-
-
-    
     func setUpTableView() {
         tableView.dataSource = self
         tableView.delegate = self // HMM?
