@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4151916C299C222600C14F9C /* APIRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4151916B299C222600C14F9C /* APIRequest.swift */; };
+		4151916E299C226500C14F9C /* TaskTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4151916D299C226500C14F9C /* TaskTableViewCell.swift */; };
 		41E9D0B92996284100D17476 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41E9D0B82996284100D17476 /* AppDelegate.swift */; };
 		41E9D0BD2996284100D17476 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41E9D0BC2996284100D17476 /* ViewController.swift */; };
 		41E9D0C22996284200D17476 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 41E9D0C12996284200D17476 /* Assets.xcassets */; };
@@ -14,6 +16,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		4151916B299C222600C14F9C /* APIRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIRequest.swift; sourceTree = "<group>"; };
+		4151916D299C226500C14F9C /* TaskTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskTableViewCell.swift; sourceTree = "<group>"; };
 		41E9D0B52996284100D17476 /* iOSTask.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iOSTask.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		41E9D0B82996284100D17476 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		41E9D0BC2996284100D17476 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -57,6 +61,8 @@
 				41E9D0C12996284200D17476 /* Assets.xcassets */,
 				41E9D0C32996284200D17476 /* LaunchScreen.storyboard */,
 				41E9D0C62996284200D17476 /* Info.plist */,
+				4151916B299C222600C14F9C /* APIRequest.swift */,
+				4151916D299C226500C14F9C /* TaskTableViewCell.swift */,
 			);
 			path = iOSTask;
 			sourceTree = "<group>";
@@ -131,7 +137,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4151916E299C226500C14F9C /* TaskTableViewCell.swift in Sources */,
 				41E9D0BD2996284100D17476 /* ViewController.swift in Sources */,
+				4151916C299C222600C14F9C /* APIRequest.swift in Sources */,
 				41E9D0B92996284100D17476 /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
