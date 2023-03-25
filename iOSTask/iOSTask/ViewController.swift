@@ -48,12 +48,20 @@ class ViewController: UIViewController, UISearchResultsUpdating, AVCaptureMetada
                 tasks = loadedTasks
             }
         }
-        
         let qrCodeButton = UIBarButtonItem(title: "Scan QR Code", style: .plain, target: self, action: #selector(scanQRCode))
         navigationItem.rightBarButtonItem = qrCodeButton
     }
     
     func fetchData() {
+        if let savedTasks = UserDefaults.standard.data(forKey: "tasks") {
+            let decoder = JSONDecoder()
+            if let loadedTasks = try? decoder.decode([Task].self, from: savedTasks) {
+                tasks = loadedTasks
+                filteredTasks = loadedTasks
+                tableView.reloadData()
+                return
+            }
+        }
         performLoginRequest { result in
             switch result {
             case .success:
@@ -65,22 +73,25 @@ class ViewController: UIViewController, UISearchResultsUpdating, AVCaptureMetada
     }
 
     func requestTasks() {
-        iOSTask.requestTasks(accessToken: ConfigAccess.accessToken) { (response, tasks, error) in
-            if let error = error {
-                print(error)
-                return
-            }
-            guard let tasks = tasks else {
-                print("No tasks found")
-                return
-            }
-            self.tasks = tasks
-            self.filteredTasks = tasks
-            DispatchQueue.main.async {
-                self.tableView.reloadData()
+            iOSTask.requestTasks(accessToken: ConfigAccess.accessToken) { (response, tasks, error) in
+                if let error = error {
+                    print(error)
+                    return
+                }
+                guard let tasks = tasks else {
+                    print("No tasks found")
+                    return
+                }
+                self.tasks = tasks
+                self.filteredTasks = tasks
+                
+                self.saveTasksToUserDefaults() // Save the updated tasks array
+                
+                DispatchQueue.main.async {
+                    self.tableView.reloadData()
+                }
             }
         }
-    }
 
     
     @objc func scanQRCode() {
@@ -141,23 +152,35 @@ class ViewController: UIViewController, UISearchResultsUpdating, AVCaptureMetada
     }
     
     @objc func refreshData() {
-        iOSTask.requestTasks(accessToken: ConfigAccess.accessToken) { [weak self] (response, tasks, error) in
-            guard let self = self else { return }
-            if let error = error {
-                print("Error: \(error)")
-                return
-            }
-            guard let tasks = tasks else {
-                print("Error: No tasks found")
-                return
-            }
-            self.tasks = tasks
-            DispatchQueue.main.async {
-                self.tableView.reloadData()
-                self.refreshControl.endRefreshing()
+            iOSTask.requestTasks(accessToken: ConfigAccess.accessToken) { [weak self] (response, tasks, error) in
+                guard let self = self else { return }
+                if let error = error {
+                    print("Error: \(error)")
+                    return
+                }
+                guard let tasks = tasks else {
+                    print("Error: No tasks found")
+                    return
+                }
+                self.tasks = tasks
+                self.filteredTasks = tasks
+                
+                self.saveTasksToUserDefaults() // Save the updated tasks array
+                
+                DispatchQueue.main.async {
+                    self.tableView.reloadData()
+                    self.refreshControl.endRefreshing()
+                }
             }
         }
-    }
+    
+    func saveTasksToUserDefaults() {
+            let encoder = JSONEncoder()
+            if let encodedTasks = try? encoder.encode(tasks) {
+                UserDefaults.standard.set(encodedTasks, forKey: "tasks")
+            }
+        }
+
     func updateSearchResults(for searchController: UISearchController) {
         if let searchText = searchController.searchBar.text, !searchText.isEmpty {
             filteredTasks = tasks.filter({( task : Task) -> Bool in
